@@ -1,0 +1,536 @@
+type: edu
+files:
+- name: src/cinema/Main.java
+  visible: true
+  text: |
+    package cinema;
+
+    import org.springframework.boot.SpringApplication;
+    import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+    @SpringBootApplication
+    public class Main {
+        public static void main(String[] args) {
+            SpringApplication.run(Main.class, args);
+        }
+    }
+  learner_created: false
+- name: build.gradle
+  visible: true
+  text: |-
+    buildscript {
+        repositories {
+            mavenCentral()
+        }
+        dependencies {
+            classpath "org.springframework.boot:spring-boot-gradle-plugin:$hs.spring.bootVersion"
+            classpath "io.spring.gradle:dependency-management-plugin:$hs.spring.dependencyManagementVersion"
+        }
+    }
+
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    repositories {
+        mavenCentral()
+    }
+
+    sourceSets.main.resources.srcDirs = ["src/resources"]
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+    }
+  learner_created: false
+- name: test/CinemaTests.java
+  visible: false
+  text: |-
+    import cinema.Main;
+    import org.hyperskill.hstest.dynamic.DynamicTest;
+    import org.hyperskill.hstest.dynamic.input.DynamicTesting;
+    import org.hyperskill.hstest.mocks.web.response.HttpResponse;
+    import org.hyperskill.hstest.stage.SpringTest;
+    import org.hyperskill.hstest.testcase.CheckResult;
+
+    import static org.hyperskill.hstest.testing.expect.Expectation.expect;
+    import static org.hyperskill.hstest.testing.expect.json.JsonChecker.*;
+
+    public class CinemaTests extends SpringTest {
+
+        public CinemaTests() {
+            super(Main.class, 28852);
+        }
+
+        CheckResult testEndpoint() {
+
+            HttpResponse response = get("/seats").send();
+
+            if (response.getStatusCode() != 200) {
+                return CheckResult.wrong("GET /seats should respond with " +
+                    "status code 200, responded: " + response.getStatusCode() + "\n\n" +
+                    "Response body:\n" + response.getContent());
+            }
+
+            return CheckResult.correct();
+        }
+
+        CheckResult testEndpointAvailableSeats() {
+            HttpResponse response = get("/seats").send();
+
+            expect(response.getContent()).asJson().check(
+                isObject()
+                    .value("available_seats",
+                        isArray(
+                            81,
+                            isObject()
+                            .value("row", isInteger(i -> i >= 1 && i <= 9))
+                            .value("column", isInteger(i -> i >= 1 && i <= 9))
+                        )
+                    )
+                    .value("total_columns", 9)
+                    .value("total_rows", 9)
+            );
+
+            return CheckResult.correct();
+        }
+
+        @DynamicTest
+        DynamicTesting[] dynamicTests = new DynamicTesting[]{
+            this::testEndpoint,
+            this::testEndpointAvailableSeats
+        };
+    }
+  learner_created: false
+- name: src/resources/application.properties
+  visible: true
+  text: |-
+    server.port=28852
+    management.endpoints.web.exposure.include=*
+    management.endpoint.shutdown.enabled=true
+  learner_created: false
+- name: src/cinema/model/Seat.java
+  visible: true
+  learner_created: true
+- name: src/cinema/model/CinemaRoom.java
+  visible: true
+  learner_created: true
+- name: src/cinema/controler/cinemaRoomControler.java
+  visible: true
+  learner_created: true
+- name: src/cinema/config/CinemaRoomConfig.java
+  visible: true
+  learner_created: true
+feedback_link: https://hyperskill.org/learn/step/13375#comment
+status: Failed
+feedback:
+  message: "Exception in test #1\n\nCannot start Spring application\n\norg.springframework.beans.factory.BeanCreationException:\
+    \ Error creating bean with name &#39;requestMappingHandlerAdapter&#39; defined\
+    \ in class path resource [org/springframework/boot/autoconfigure/web/servlet/WebMvcAutoConfiguration$EnableWebMvcConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter]:\
+    \ Factory method &#39;requestMappingHandlerAdapter&#39; threw exception; nested\
+    \ exception is org.springframework.beans.factory.BeanCreationException: Error\
+    \ creating bean with name &#39;messageConverters&#39; defined in class path resource\
+    \ [org/springframework/boot/autoconfigure/http/HttpMessageConvertersAutoConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.boot.autoconfigure.http.HttpMessageConverters]:\
+    \ Factory method &#39;messageConverters&#39; threw exception; nested exception\
+    \ is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating\
+    \ bean with name &#39;mappingJackson2HttpMessageConverter&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/http/JacksonHttpMessageConvertersConfiguration$MappingJackson2HttpMessageConverterConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;mappingJackson2HttpMessageConverter&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException:\
+    \ Error creating bean with name &#39;jacksonObjectMapper&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;jacksonObjectMapper&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.BeanCreationException:\
+    \ Error creating bean with name &#39;jacksonObjectMapperBuilder&#39; defined in\
+    \ class path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.http.converter.json.Jackson2ObjectMapperBuilder]:\
+    \ Factory method &#39;jacksonObjectMapperBuilder&#39; threw exception; nested\
+    \ exception is java.lang.IllegalArgumentException: Constant named &#39;SNAKE_CASE\
+    \ &#39; not found\r\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:658)\r\
+    \n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:638)\r\
+    \n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1352)\r\
+    \n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1195)\r\
+    \n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582)\r\
+    \n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)\r\
+    \n\tat org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)\r\
+    \n\tat org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)\r\
+    \n\tat org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)\r\
+    \n\tat org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)\r\
+    \n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:944)\r\
+    \n\tat org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:918)\r\
+    \n\tat org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:583)\r\
+    \n\tat org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:145)\r\
+    \n\tat org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)\r\
+    \n\tat org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:434)\r\
+    \n\tat org.springframework.boot.SpringApplication.run(SpringApplication.java:338)\r\
+    \n\tat org.springframework.boot.SpringApplication.run(SpringApplication.java:1343)\r\
+    \n\tat org.springframework.boot.SpringApplication.run(SpringApplication.java:1332)\r\
+    \n\tat cinema.Main.main(Main.java:9)\n\nPlease find below the output of your program\
+    \ during this failed test.\n\n---\n\n.   ____          _            __ _ _\n /\\\
+    \\ / ___&#39;_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n( ( )\\___ | &#39;_ | &#39;_|\
+    \ | &#39;_ \\/ _` | \\ \\ \\ \\\n \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n\
+    \  &#39;  |____| .__|_| |_|_| |_\\__, | / / / /\n =========|_|==============|___/=/_/_/_/\n\
+    \ :: Spring Boot ::                (v2.5.6)\n\n2022-06-24 16:13:27.356  INFO 6696\
+    \ --- [    Test worker] cinema.Main                              : Starting Main\
+    \ using Java 17.0.3 on Aili with PID 6696 (started by Пользователь in C:\\Users\\\
+    Пользователь\\IdeaProjects\\Cinema Room REST Service\\Cinema Room REST Service\\\
+    task)\n2022-06-24 16:13:27.396  INFO 6696 --- [    Test worker] cinema.Main  \
+    \                            : No active profile set, falling back to default\
+    \ profiles: default\n2022-06-24 16:13:35.474  INFO 6696 --- [    Test worker]\
+    \ o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s):\
+    \ 28852 (http)\n2022-06-24 16:13:35.504  INFO 6696 --- [    Test worker] o.apache.catalina.core.StandardService\
+    \   : Starting service [Tomcat]\n2022-06-24 16:13:35.524  INFO 6696 --- [    Test\
+    \ worker] org.apache.catalina.core.StandardEngine  : Starting Servlet engine:\
+    \ [Apache Tomcat/9.0.54]\n2022-06-24 16:13:35.845  INFO 6696 --- [    Test worker]\
+    \ o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext\n\
+    2022-06-24 16:13:35.846  INFO 6696 --- [    Test worker] w.s.c.ServletWebServerApplicationContext\
+    \ : Root WebApplicationContext: initialization completed in 7231 ms\n2022-06-24\
+    \ 16:13:37.158  WARN 6696 --- [    Test worker] ConfigServletWebServerApplicationContext\
+    \ : Exception encountered during context initialization - cancelling refresh attempt:\
+    \ org.springframework.beans.factory.BeanCreationException: Error creating bean\
+    \ with name &#39;requestMappingHandlerAdapter&#39; defined in class path resource\
+    \ [org/springframework/boot/autoconfigure/web/servlet/WebMvcAutoConfiguration$EnableWebMvcConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter]:\
+    \ Factory method &#39;requestMappingHandlerAdapter&#39; threw exception; nested\
+    \ exception is org.springframework.beans.factory.BeanCreationException: Error\
+    \ creating bean with name &#39;messageConverters&#39; defined in class path resource\
+    \ [org/springframework/boot/autoconfigure/http/HttpMessageConvertersAutoConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.boot.autoconfigure.http.HttpMessageConverters]:\
+    \ Factory method &#39;messageConverters&#39; threw exception; nested exception\
+    \ is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating\
+    \ bean with name &#39;mappingJackson2HttpMessageConverter&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/http/JacksonHttpMessageConvertersConfiguration$MappingJackson2HttpMessageConverterConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;mappingJackson2HttpMessageConverter&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException:\
+    \ Error creating bean with name &#39;jacksonObjectMapper&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;jacksonObjectMapper&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.BeanCreationException:\
+    \ Error creating bean with name &#39;jacksonObjectMapperBuilder&#39; defined in\
+    \ class path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.http.converter.json.Jackson2ObjectMapperBuilder]:\
+    \ Factory method &#39;jacksonObjectMapperBuilder&#39; threw exception; nested\
+    \ exception is java.lang.IllegalArgumentException: Constant named &#39;SNAKE_CASE\
+    \ &#39; not found\n2022-06-24 16:13:37.168  INFO 6696 --- [    Test worker] o.apache.catalina.core.StandardService\
+    \   : Stopping service [Tomcat]\n2022-06-24 16:13:37.218  INFO 6696 --- [    Test\
+    \ worker] ConditionEvaluationReportLoggingListener : \n\nError starting ApplicationContext.\
+    \ To display the conditions report re-run your application with &#39;debug&#39;\
+    \ enabled.\n2022-06-24 16:13:37.288 ERROR 6696 --- [    Test worker] o.s.boot.SpringApplication\
+    \               : Application run failed\n\norg.springframework.beans.factory.BeanCreationException:\
+    \ Error creating bean with name &#39;requestMappingHandlerAdapter&#39; defined\
+    \ in class path resource [org/springframework/boot/autoconfigure/web/servlet/WebMvcAutoConfiguration$EnableWebMvcConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter]:\
+    \ Factory method &#39;requestMappingHandlerAdapter&#39; threw exception; nested\
+    \ exception is org.springframework.beans.factory.BeanCreationException: Error\
+    \ creating bean with name &#39;messageConverters&#39; defined in class path resource\
+    \ [org/springframework/boot/autoconfigure/http/HttpMessageConvertersAutoConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.boot.autoconfigure.http.HttpMessageConverters]:\
+    \ Factory method &#39;messageConverters&#39; threw exception; nested exception\
+    \ is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating\
+    \ bean with name &#39;mappingJackson2HttpMessageConverter&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/http/JacksonHttpMessageConvertersConfiguration$MappingJackson2HttpMessageConverterConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;mappingJackson2HttpMessageConverter&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException:\
+    \ Error creating bean with name &#39;jacksonObjectMapper&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;jacksonObjectMapper&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.BeanCreationException:\
+    \ Error creating bean with name &#39;jacksonObjectMapperBuilder&#39; defined in\
+    \ class path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.http.converter.json.Jackson2ObjectMapperBuilder]:\
+    \ Factory method &#39;jacksonObjectMapperBuilder&#39; threw exception; nested\
+    \ exception is java.lang.IllegalArgumentException: Constant named &#39;SNAKE_CASE\
+    \ &#39; not found\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:658)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:638)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1352)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1195)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:944)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:918)\
+    \ ~[spring-context-5.3.12.jar:5.3.12]\n\tat org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:583)\
+    \ ~[spring-context-5.3.12.jar:5.3.12]\n\tat org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:145)\
+    \ ~[spring-boot-2.5.6.jar:2.5.6]\n\tat org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)\
+    \ ~[spring-boot-2.5.6.jar:2.5.6]\n\tat org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:434)\
+    \ ~[spring-boot-2.5.6.jar:2.5.6]\n\tat org.springframework.boot.SpringApplication.run(SpringApplication.java:338)\
+    \ ~[spring-boot-2.5.6.jar:2.5.6]\n\tat org.springframework.boot.SpringApplication.run(SpringApplication.java:1343)\
+    \ ~[spring-boot-2.5.6.jar:2.5.6]\n\tat org.springframework.boot.SpringApplication.run(SpringApplication.java:1332)\
+    \ ~[spring-boot-2.5.6.jar:2.5.6]\n\tat cinema.Main.main(Main.java:9) ~[main/:na]\n\
+    \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\
+    \ ~[na:na]\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\
+    \ ~[na:na]\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\
+    \ ~[na:na]\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]\n\
+    \tat org.hyperskill.hstest.stage.SpringTest.startSpring(SpringTest.java:139) ~[hs-test-release-SNAPSHOT.jar:na]\n\
+    \tat org.hyperskill.hstest.stage.SpringTest.launchSpring(SpringTest.java:50) ~[hs-test-release-SNAPSHOT.jar:na]\n\
+    \tat org.hyperskill.hstest.testing.runner.SpringApplicationRunner.launchSpringBootApplication(SpringApplicationRunner.java:20)\
+    \ ~[hs-test-release-SNAPSHOT.jar:na]\n\tat org.hyperskill.hstest.testing.runner.SpringApplicationRunner.setUp(SpringApplicationRunner.java:35)\
+    \ ~[hs-test-release-SNAPSHOT.jar:na]\n\tat org.hyperskill.hstest.testing.TestRun.setUp(TestRun.java:70)\
+    \ ~[hs-test-release-SNAPSHOT.jar:na]\n\tat org.hyperskill.hstest.stage.StageTest.start(StageTest.java:111)\
+    \ ~[hs-test-release-SNAPSHOT.jar:na]\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native\
+    \ Method) ~[na:na]\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\
+    \ ~[na:na]\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\
+    \ ~[na:na]\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]\n\
+    \tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:413)\
+    \ ~[junit-4.13.2.jar:4.13.2]\n\tat org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.runTestClass(JUnitTestClassExecutor.java:110)\
+    \ ~[na:na]\n\tat org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.execute(JUnitTestClassExecutor.java:58)\
+    \ ~[na:na]\n\tat org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.execute(JUnitTestClassExecutor.java:38)\
+    \ ~[na:na]\n\tat org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestClassProcessor.processTestClass(AbstractJUnitTestClassProcessor.java:62)\
+    \ ~[na:na]\n\tat org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:51)\
+    \ ~[na:na]\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native\
+    \ Method) ~[na:na]\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\
+    \ ~[na:na]\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\
+    \ ~[na:na]\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]\n\
+    \tat org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)\
+    \ ~[na:na]\n\tat org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)\
+    \ ~[na:na]\n\tat org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)\
+    \ ~[na:na]\n\tat org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:94)\
+    \ ~[na:na]\n\tat jdk.proxy1/jdk.proxy1.$Proxy2.processTestClass(Unknown Source)\
+    \ ~[na:na]\n\tat org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:176)\
+    \ ~[na:na]\n\tat org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:129)\
+    \ ~[na:na]\n\tat org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:100)\
+    \ ~[na:na]\n\tat org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:60)\
+    \ ~[na:na]\n\tat org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)\
+    \ ~[na:na]\n\tat org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:133)\
+    \ ~[na:na]\n\tat org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:71)\
+    \ ~[na:na]\n\tat worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)\
+    \ ~[gradle-worker.jar:na]\n\tat worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)\
+    \ ~[gradle-worker.jar:na]\nCaused by: org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter]:\
+    \ Factory method &#39;requestMappingHandlerAdapter&#39; threw exception; nested\
+    \ exception is org.springframework.beans.factory.BeanCreationException: Error\
+    \ creating bean with name &#39;messageConverters&#39; defined in class path resource\
+    \ [org/springframework/boot/autoconfigure/http/HttpMessageConvertersAutoConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.boot.autoconfigure.http.HttpMessageConverters]:\
+    \ Factory method &#39;messageConverters&#39; threw exception; nested exception\
+    \ is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating\
+    \ bean with name &#39;mappingJackson2HttpMessageConverter&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/http/JacksonHttpMessageConvertersConfiguration$MappingJackson2HttpMessageConverterConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;mappingJackson2HttpMessageConverter&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException:\
+    \ Error creating bean with name &#39;jacksonObjectMapper&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;jacksonObjectMapper&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.BeanCreationException:\
+    \ Error creating bean with name &#39;jacksonObjectMapperBuilder&#39; defined in\
+    \ class path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.http.converter.json.Jackson2ObjectMapperBuilder]:\
+    \ Factory method &#39;jacksonObjectMapperBuilder&#39; threw exception; nested\
+    \ exception is java.lang.IllegalArgumentException: Constant named &#39;SNAKE_CASE\
+    \ &#39; not found\n\tat org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:185)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.lambda$instantiate$2(ConstructorResolver.java:648)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:399)\
+    \ ~[na:na]\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:647)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\t... 73 common frames omitted\nCaused by:\
+    \ org.springframework.beans.factory.BeanCreationException: Error creating bean\
+    \ with name &#39;messageConverters&#39; defined in class path resource [org/springframework/boot/autoconfigure/http/HttpMessageConvertersAutoConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.boot.autoconfigure.http.HttpMessageConverters]:\
+    \ Factory method &#39;messageConverters&#39; threw exception; nested exception\
+    \ is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating\
+    \ bean with name &#39;mappingJackson2HttpMessageConverter&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/http/JacksonHttpMessageConvertersConfiguration$MappingJackson2HttpMessageConverterConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;mappingJackson2HttpMessageConverter&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException:\
+    \ Error creating bean with name &#39;jacksonObjectMapper&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;jacksonObjectMapper&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.BeanCreationException:\
+    \ Error creating bean with name &#39;jacksonObjectMapperBuilder&#39; defined in\
+    \ class path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.http.converter.json.Jackson2ObjectMapperBuilder]:\
+    \ Factory method &#39;jacksonObjectMapperBuilder&#39; threw exception; nested\
+    \ exception is java.lang.IllegalArgumentException: Constant named &#39;SNAKE_CASE\
+    \ &#39; not found\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:658)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:638)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1352)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1195)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:276)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1380)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory$DependencyObjectProvider.getIfAvailable(DefaultListableBeanFactory.java:2021)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory$DependencyObjectProvider.ifAvailable(DefaultListableBeanFactory.java:2032)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration$WebMvcAutoConfigurationAdapter.configureMessageConverters(WebMvcAutoConfiguration.java:232)\
+    \ ~[spring-boot-autoconfigure-2.5.6.jar:2.5.6]\n\tat org.springframework.web.servlet.config.annotation.WebMvcConfigurerComposite.configureMessageConverters(WebMvcConfigurerComposite.java:137)\
+    \ ~[spring-webmvc-5.3.12.jar:5.3.12]\n\tat org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration.configureMessageConverters(DelegatingWebMvcConfiguration.java:118)\
+    \ ~[spring-webmvc-5.3.12.jar:5.3.12]\n\tat org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport.getMessageConverters(WebMvcConfigurationSupport.java:865)\
+    \ ~[spring-webmvc-5.3.12.jar:5.3.12]\n\tat org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport.requestMappingHandlerAdapter(WebMvcConfigurationSupport.java:673)\
+    \ ~[spring-webmvc-5.3.12.jar:5.3.12]\n\tat org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration$EnableWebMvcConfiguration.requestMappingHandlerAdapter(WebMvcAutoConfiguration.java:423)\
+    \ ~[spring-boot-autoconfigure-2.5.6.jar:2.5.6]\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native\
+    \ Method) ~[na:na]\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\
+    \ ~[na:na]\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\
+    \ ~[na:na]\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]\n\
+    \tat org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:154)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\t... 76 common frames omitted\nCaused by:\
+    \ org.springframework.beans.BeanInstantiationException: Failed to instantiate\
+    \ [org.springframework.boot.autoconfigure.http.HttpMessageConverters]: Factory\
+    \ method &#39;messageConverters&#39; threw exception; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException:\
+    \ Error creating bean with name &#39;mappingJackson2HttpMessageConverter&#39;\
+    \ defined in class path resource [org/springframework/boot/autoconfigure/http/JacksonHttpMessageConvertersConfiguration$MappingJackson2HttpMessageConverterConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;mappingJackson2HttpMessageConverter&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException:\
+    \ Error creating bean with name &#39;jacksonObjectMapper&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;jacksonObjectMapper&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.BeanCreationException:\
+    \ Error creating bean with name &#39;jacksonObjectMapperBuilder&#39; defined in\
+    \ class path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.http.converter.json.Jackson2ObjectMapperBuilder]:\
+    \ Factory method &#39;jacksonObjectMapperBuilder&#39; threw exception; nested\
+    \ exception is java.lang.IllegalArgumentException: Constant named &#39;SNAKE_CASE\
+    \ &#39; not found\n\tat org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:185)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.lambda$instantiate$2(ConstructorResolver.java:648)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:399)\
+    \ ~[na:na]\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:647)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\t... 100 common frames omitted\nCaused by:\
+    \ org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating\
+    \ bean with name &#39;mappingJackson2HttpMessageConverter&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/http/JacksonHttpMessageConvertersConfiguration$MappingJackson2HttpMessageConverterConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;mappingJackson2HttpMessageConverter&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException:\
+    \ Error creating bean with name &#39;jacksonObjectMapper&#39; defined in class\
+    \ path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;jacksonObjectMapper&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.BeanCreationException:\
+    \ Error creating bean with name &#39;jacksonObjectMapperBuilder&#39; defined in\
+    \ class path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.http.converter.json.Jackson2ObjectMapperBuilder]:\
+    \ Factory method &#39;jacksonObjectMapperBuilder&#39; threw exception; nested\
+    \ exception is java.lang.IllegalArgumentException: Constant named &#39;SNAKE_CASE\
+    \ &#39; not found\n\tat org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:800)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:541)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1352)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1195)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:276)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.addCandidateEntry(DefaultListableBeanFactory.java:1605)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.findAutowireCandidates(DefaultListableBeanFactory.java:1562)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveMultipleBeans(DefaultListableBeanFactory.java:1406)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1338)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory$DependencyObjectProvider.resolveStream(DefaultListableBeanFactory.java:2108)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory$DependencyObjectProvider.orderedStream(DefaultListableBeanFactory.java:2102)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration.messageConverters(HttpMessageConvertersAutoConfiguration.java:70)\
+    \ ~[spring-boot-autoconfigure-2.5.6.jar:2.5.6]\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native\
+    \ Method) ~[na:na]\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\
+    \ ~[na:na]\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\
+    \ ~[na:na]\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]\n\
+    \tat org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:154)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\t... 103 common frames omitted\nCaused by:\
+    \ org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating\
+    \ bean with name &#39;jacksonObjectMapper&#39; defined in class path resource\
+    \ [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperConfiguration.class]:\
+    \ Unsatisfied dependency expressed through method &#39;jacksonObjectMapper&#39;\
+    \ parameter 0; nested exception is org.springframework.beans.factory.BeanCreationException:\
+    \ Error creating bean with name &#39;jacksonObjectMapperBuilder&#39; defined in\
+    \ class path resource [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.http.converter.json.Jackson2ObjectMapperBuilder]:\
+    \ Factory method &#39;jacksonObjectMapperBuilder&#39; threw exception; nested\
+    \ exception is java.lang.IllegalArgumentException: Constant named &#39;SNAKE_CASE\
+    \ &#39; not found\n\tat org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:800)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:541)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1352)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1195)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:276)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1380)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1300)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:887)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\t... 125 common frames omitted\nCaused by:\
+    \ org.springframework.beans.factory.BeanCreationException: Error creating bean\
+    \ with name &#39;jacksonObjectMapperBuilder&#39; defined in class path resource\
+    \ [org/springframework/boot/autoconfigure/jackson/JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration.class]:\
+    \ Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException:\
+    \ Failed to instantiate [org.springframework.http.converter.json.Jackson2ObjectMapperBuilder]:\
+    \ Factory method &#39;jacksonObjectMapperBuilder&#39; threw exception; nested\
+    \ exception is java.lang.IllegalArgumentException: Constant named &#39;SNAKE_CASE\
+    \ &#39; not found\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:658)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:638)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1352)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1195)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:353)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:276)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1380)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1300)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:887)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\t... 139 common frames omitted\nCaused by:\
+    \ org.springframework.beans.BeanInstantiationException: Failed to instantiate\
+    \ [org.springframework.http.converter.json.Jackson2ObjectMapperBuilder]: Factory\
+    \ method &#39;jacksonObjectMapperBuilder&#39; threw exception; nested exception\
+    \ is java.lang.IllegalArgumentException: Constant named &#39;SNAKE_CASE &#39;\
+    \ not found\n\tat org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:185)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat org.springframework.beans.factory.support.ConstructorResolver.lambda$instantiate$2(ConstructorResolver.java:648)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:399)\
+    \ ~[na:na]\n\tat org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:647)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\t... 151 common frames omitted\nCaused by:\
+    \ java.lang.IllegalArgumentException: Constant named &#39;SNAKE_CASE &#39; not\
+    \ found\n\tat org.springframework.util.Assert.notNull(Assert.java:219) ~[spring-core-5.3.12.jar:5.3.12]\n\
+    \tat org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$Jackson2ObjectMapperBuilderCustomizerConfiguration$StandardJackson2ObjectMapperBuilderCustomizer.configurePropertyNamingStrategyField(JacksonAutoConfiguration.java:260)\
+    \ ~[spring-boot-autoconfigure-2.5.6.jar:2.5.6]\n\tat org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$Jackson2ObjectMapperBuilderCustomizerConfiguration$StandardJackson2ObjectMapperBuilderCustomizer.configurePropertyNamingStrategy(JacksonAutoConfiguration.java:245)\
+    \ ~[spring-boot-autoconfigure-2.5.6.jar:2.5.6]\n\tat org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$Jackson2ObjectMapperBuilderCustomizerConfiguration$StandardJackson2ObjectMapperBuilderCustomizer.customize(JacksonAutoConfiguration.java:187)\
+    \ ~[spring-boot-autoconfigure-2.5.6.jar:2.5.6]\n\tat org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration.customize(JacksonAutoConfiguration.java:136)\
+    \ ~[spring-boot-autoconfigure-2.5.6.jar:2.5.6]\n\tat org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration.jacksonObjectMapperBuilder(JacksonAutoConfiguration.java:129)\
+    \ ~[spring-boot-autoconfigure-2.5.6.jar:2.5.6]\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native\
+    \ Method) ~[na:na]\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\
+    \ ~[na:na]\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\
+    \ ~[na:na]\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]\n\
+    \tat org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:154)\
+    \ ~[spring-beans-5.3.12.jar:5.3.12]\n\t... 154 common frames omitted"
+  time: Fri, 24 Jun 2022 13:13:38 UTC
+record: -1
